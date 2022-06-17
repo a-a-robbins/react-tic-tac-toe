@@ -2,34 +2,80 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import'./index.css'; 
 
-class Square extends React.Component {
-    //set state of squares
+//An easier way to do what we did initially -- extending React.Component
+//Functions are ONLY for situations that just use render()
+function Square(props) {
+    return (
+        <button className='square' onClick={props.onClick}>
+            {props.value}
+        </button>
+    ); 
+}
+// class Square extends React.Component {
+//     //set state of squares (commented out because using Board to keep track of game state)
+//     // constructor(props) {
+//     //     //super() must ALWAYS be called when defining a constructor in a subclass
+//     //     // "all React component classes that have a constructor should start with a super(props) call"
+//     //     super(props); 
+//     //     this.state = {
+//     //         value: null, 
+//     //     }; 
+//     // }
+
+//     //render the value of each square
+//     render() {
+//       return (
+//         <button className="square" onClick={() => this.props.onClick()}>
+//           {this.props.value}
+//         </button>
+//       );
+//     }
+//   }
+  
+  class Board extends React.Component {
+    //keep state data for all child squares
     constructor(props) {
-        //super() must ALWAYS be called when defining a constructor in a subclass
-        // "all React component classes that have a constructor should start with a super(props) call"
         super(props); 
         this.state = {
-            value: null, 
+            squares: Array(9).fill(null),
+            xIsNext: true,
         }; 
     }
 
-    //render the value of each square
-    render() {
+    //deal with clicking a square
+    handleClick(i) {
+        //slice() creates a copy
+        //copies allow us to implement immutability (allow us to undo/look back)
+        const squares = this.state.squares.slice(); 
+        if (calculateWinner(squares) || squares[i]) {
+            return; 
+        }
+        squares[i] = this.state.xIsNext ? 'X' : 'O'; 
+        this.setState({
+            squares: squares,
+            xIsNext: !this.state.xIsNext,
+        });
+    }
+
+    //deal with rendering what the value of the squares
+    renderSquare(i) {
       return (
-        <button className="square" onClick={() => this.setState({value: 'X'})}>
-          {this.state.value}
-        </button>
+        <Square 
+            value={this.state.squares[i]} 
+            onClick={() => this.handleClick(i)}/>
       );
     }
-  }
   
-  class Board extends React.Component {
-    renderSquare(i) {
-      return <Square value={i} />;
-    }
-  
+    //render the game board/playing surface
     render() {
-      const status = 'Next player: X';
+      const winner = calculateWinner(this.state.squares); 
+      let status; 
+      if(winner) {
+        status = 'Winner: ' + winner; 
+      }
+      else {
+        status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+      }
   
       return (
         <div>
@@ -74,4 +120,26 @@ class Square extends React.Component {
   
   const root = ReactDOM.createRoot(document.getElementById("root"));
   root.render(<Game />);
+  
+  //declare a winner
+  function calculateWinner(squares) {
+    const lines = [
+        [0, 1, 2], 
+        [3, 4, 5], 
+        [6, 7, 8], 
+        [0, 3, 6], 
+        [1, 4, 7], 
+        [2, 5, 8], 
+        [0, 4, 8], 
+        [2, 4, 6], 
+    ]; 
+
+    for (let i = 0; i < lines.length; i++) {
+        const [a, b, c] = lines[i]; 
+            if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+                return squares[a]; 
+            }
+        }
+        return null; 
+    }
   
